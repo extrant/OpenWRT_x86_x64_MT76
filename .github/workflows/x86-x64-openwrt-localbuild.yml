@@ -94,8 +94,33 @@ jobs:
       id: compile
       run: |
         cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        
+        # 计算安全线程数：每 1.5GB 内存分配一个线程，但不超过物理核心数
+        # mem_free_gb=$(free -g | awk '/^Mem:/ {print $2}') # 获取总内存(GB)
+        # 这里使用可用内存(Available)更准确
+        mem_avail_kb=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+        mem_safe_threads=$(( mem_avail_kb / 1024 / 1536 ))
+        
+        # 如果计算结果小于 1，则至少保留 1 个线程
+        [ $mem_safe_threads -lt 1 ] && mem_safe_threads=1
+        
+        # 获取物理核心数
+        cpu_threads=$(nproc)
+        
+        # 取两者之间的最小值
+        if [ $mem_safe_threads -lt $cpu_threads ]; then
+            final_threads=$mem_safe_threads
+        else
+            final_threads=$cpu_threads
+        fi
+        
+        echo "System CPU Threads: $cpu_threads"
+        echo "Safe Threads based on RAM: $mem_safe_threads"
+        echo "Final Threads used: $final_threads"
+        
+        echo -e "$final_threads thread compile"
+        make -j$final_threads || make -j1 || make -j1 V=s
+        
         echo "date1=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
         echo "date2=$(date "+%Y年%m月%d日")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT

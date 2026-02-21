@@ -4,7 +4,7 @@
 ## 本固件在任何组织和个人不得用于任何商业盈利用途。
 
 ### 默认编译  
-- 用户名：root 密码：password  管理IP：192.168.11.1
+- 用户名：root 密码：password  管理IP：192.168.50.2
 - 固件下载地址：https://github.com/DHDAXCW/OpenWRT_x86_x64/releases
 - 电报群：https://t.me/armopenwrt
 ### 固件特色
